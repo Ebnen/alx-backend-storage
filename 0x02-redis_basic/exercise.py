@@ -31,3 +31,11 @@ class Cache():
     def get_int(self, data: bytes) -> int:
         """convert bytes to int"""
         return int.from_bytes(data, byteorder='big')
+
+    def count_calls(method: Callable) -> Callable:
+        """count calls"""
+        def wrapper(self, *args, **kwargs):
+            """wrapper function"""
+            self._redis.incr(method.__qualname__)
+            return method(self, *args, **kwargs)
+        return wrapper
