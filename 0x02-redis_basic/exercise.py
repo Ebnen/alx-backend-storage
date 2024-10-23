@@ -2,8 +2,19 @@
 """using redis to store and retrieve values"""
 import redis
 import uuid
+import functools
 from typing import Union, Any, Callable
 
+
+def count_calls(method: Callable) -> Callable:
+    """Decorator that increments a Redis key with the qualified name of the method"""
+    @functools.wraps(method) 
+    def wrapper(self, *args, **kwargs):
+        """Wrapper function that increments the call count in Redis."""
+        key = f"count:{method.__qualname__}"
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 class Cache():
     def __init__(self):
@@ -32,10 +43,4 @@ class Cache():
         """convert bytes to int"""
         return int.from_bytes(data, byteorder='big')
 
-    def count_calls(method: Callable) -> Callable:
-        """count calls"""
-        def wrapper(self, *args, **kwargs):
-            """wrapper function"""
-            self._redis.incr(method.__qualname__)
-            return method(self, *args, **kwargs)
-        return wrapper
+   
